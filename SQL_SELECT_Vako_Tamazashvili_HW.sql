@@ -17,8 +17,8 @@ select
 	f.release_year, 
 	f.rental_rate
 from public.film f
-inner join film_category fc on f.film_id = fc.film_id
-inner join category c on fc.category_id = c.category_id
+inner join public.film_category fc on f.film_id = fc.film_id
+inner join public.category c on fc.category_id = c.category_id
 where 
 	c.name = 'Animation' 
 	and f.release_year between 2017 AND 2019 
@@ -44,8 +44,8 @@ from  (select
 	f.release_year, 
 	f.rental_rate
 from  public.film f
-inner join film_category fc on f.film_id = fc.film_id
-inner join category c on fc.category_id = c.category_id
+inner join public.film_category fc on f.film_id = fc.film_id
+inner join public.category c on fc.category_id = c.category_id
 where 
 	c.name = 'Animation' 
 	and f.release_year between 2017 and 2019 
@@ -58,8 +58,8 @@ select
 	f.release_year, 
 	f.rental_rate
 from public.film f
-inner join film_category fc on f.film_id = fc.film_id
-inner join category c on fc.category_id = c.category_id
+inner join public.film_category fc on f.film_id = fc.film_id
+inner join public.category c on fc.category_id = c.category_id
 where 
 	c.name = 'Animation' 
 	and f.release_year between 2017 and 2019 
@@ -154,7 +154,7 @@ inner join public.inventory i on r.inventory_id = i.inventory_id
 inner join public.store s on i.store_id = s.store_id
 inner join public.address a on s.address_id = a.address_id
 where p.payment_date >= DATE '2017-04-01'
-group by a.address, a.address2;
+group by s.store_id, a.address, a.address2;
 
 /* Choice: I would go with Join here as well for the same reasons. it is simple and efficient and doesnt require 
 intermediate steps.
@@ -189,7 +189,7 @@ with actor_movies as (
     from public.actor a
     inner join public.film_actor fa on a.actor_id = fa.actor_id
     inner join public.film f on fa.film_id = f.film_id
-    where f.release_year > 2015
+    where f.release_year >= 2015
     group by a.actor_id, a.first_name, a.last_name
 )
 select 
@@ -220,7 +220,7 @@ from (
     from public.actor a
     inner join public.film_actor fa on a.actor_id = fa.actor_id
     inner join public.film f on fa.film_id = f.film_id
-    where f.release_year > 2015
+    where f.release_year >= 2015
     group by a.actor_id, a.first_name, a.last_name
 ) sub
 order by sub.number_of_movies desc
@@ -237,7 +237,7 @@ inner join public.film_actor fa
     on a.actor_id = fa.actor_id
 inner join public.film f 
     on fa.film_id = f.film_id
-where f.release_year > 2015
+where f.release_year >= 2015
 group by a.actor_id, a.first_name, a.last_name
 order by number_of_movies desc
 limit 5;
@@ -271,13 +271,13 @@ with categorized_films as (
     from public.film f
     inner join public.film_category fc on f.film_id = fc.film_id
     inner join public.category c on fc.category_id = c.category_id
-    where c.name in ('Drama', 'Travel', 'Documentary')
+    where lower(c.name) in ('drama', 'travel', 'documentary')
 )
 select 
     release_year,
-    sum(case when category_name = 'Drama' then 1 else 0 end) as number_of_drama_movies,
-    sum(case when category_name = 'Travel' then 1 else 0 end) as number_of_travel_movies,
-    sum(case when category_name = 'Documentary' then 1 else 0 end) as number_of_documentary_movies
+    sum(case when lower(category_name) = 'drama' then 1 else 0 end) as number_of_drama_movies,
+    sum(case when lower(category_name) = 'travel' then 1 else 0 end) as number_of_travel_movies,
+    sum(case when lower(category_name) = 'documentary' then 1 else 0 end) as number_of_documentary_movies
 from categorized_films
 group by release_year
 order by release_year desc;
@@ -290,9 +290,9 @@ order by release_year desc;
 
 select 
     sub.release_year,
-    sum(case when sub.category_name = 'Drama' then 1 else 0 end) as number_of_drama_movies,
-    sum(case when sub.category_name = 'Travel' then 1 else 0 end) as number_of_travel_movies,
-    sum(case when sub.category_name = 'Documentary' then 1 else 0 end) as number_of_documentary_movies
+    sum(case when lower(sub.category_name) = 'drama' then 1 else 0 end) as number_of_drama_movies,
+    sum(case when lower(sub.category_name) = 'travel' then 1 else 0 end) as number_of_travel_movies,
+    sum(case when lower(sub.category_name) = 'documentary' then 1 else 0 end) as number_of_documentary_movies
 from (
     select 
         f.release_year,
@@ -300,7 +300,7 @@ from (
     from public.film f
     inner join public.film_category fc on f.film_id = fc.film_id
     inner join public.category c on fc.category_id = c.category_id
-    where c.name in ('Drama', 'Travel', 'Documentary')
+    where lower(c.name) in ('drama', 'travel', 'documentary')
 ) sub
 group by sub.release_year
 order by sub.release_year desc;
@@ -309,13 +309,13 @@ order by sub.release_year desc;
 
 select 
     f.release_year,
-    sum(case when c.name = 'Drama' then 1 else 0 end) as number_of_drama_movies,
-    sum(case when c.name = 'Travel' then 1 else 0 end) as number_of_travel_movies,
-    sum(case when c.name = 'Documentary' then 1 else 0 end) as number_of_documentary_movies
+    sum(case when lower(c.name) = 'drama' then 1 else 0 end) as number_of_drama_movies,
+    sum(case when lower(c.name) = 'travel' then 1 else 0 end) as number_of_travel_movies,
+    sum(case when lower(c.name) = 'documentary' then 1 else 0 end) as number_of_documentary_movies
 from public.film f
 inner join public.film_category fc on f.film_id = fc.film_id
 inner join public.category c on fc.category_id = c.category_id
-where c.name in ('Drama', 'Travel', 'Documentary')
+where lower(c.name) in ('drama', 'travel', 'documentary')
 group by f.release_year
 order by f.release_year desc;
 
@@ -614,7 +614,7 @@ Business logic: generate all possible pairs of films for each actor
 -- Solution 1 : CTE
 
 with actor_films as (
-    select 
+    select distinct
         a.actor_id,
         a.first_name,
         a.last_name,
@@ -623,51 +623,76 @@ with actor_films as (
     inner join public.film_actor fa on a.actor_id = fa.actor_id
     inner join public.film f on fa.film_id = f.film_id
 ),
-film_gaps as (
+next_years as (
     select 
         af1.actor_id,
         af1.first_name,
         af1.last_name,
-        af1.release_year as year1,
-        af2.release_year as year2,
-        af2.release_year - af1.release_year as gap
+        af1.release_year as current_year,
+        min(af2.release_year) as next_year
     from actor_films af1
-    inner join actor_films af2 on af1.actor_id = af2.actor_id
+    inner join actor_films af2 
+        on af1.actor_id = af2.actor_id
        and af2.release_year > af1.release_year
+    group by 
+        af1.actor_id,
+        af1.first_name,
+        af1.last_name,
+        af1.release_year
 )
 select 
     actor_id,
     first_name,
     last_name,
-    max(gap) as max_inactivity_gap
-from film_gaps
+    max(next_year - current_year) as max_gap
+from next_years
 group by actor_id, first_name, last_name
-order by max_inactivity_gap desc;
+order by max_gap desc;
 
 -- Solution 2: Subquery
 
 select 
-    fg.actor_id,
-    fg.first_name,
-    fg.last_name,
-    max(fg.gap) as max_inactivity_gap
+    t.actor_id,
+    t.first_name,
+    t.last_name,
+    max(t.next_year - t.current_year) as max_gap
 from (
-    select 
-        a.actor_id,
-        a.first_name,
-        a.last_name,
-        f1.release_year as year1,
-        f2.release_year as year2,
-        f2.release_year - f1.release_year as gap
-    from public.actor a
-    inner join public.film_actor fa1 on a.actor_id = fa1.actor_id
-    inner join public.film f1 on fa1.film_id = f1.film_id
-    inner join public.film_actor fa2 on a.actor_id = fa2.actor_id
-    inner join public.film f2 on fa2.film_id = f2.film_id
-    where f2.release_year > f1.release_year
-) fg
-group by fg.actor_id, fg.first_name, fg.last_name
-order by max_inactivity_gap desc;
+    select distinct
+        af1.actor_id,
+        af1.first_name,
+        af1.last_name,
+        af1.release_year as current_year,
+        min(af2.release_year) as next_year
+    from (
+        select distinct
+            a.actor_id,
+            a.first_name,
+            a.last_name,
+            f.release_year
+        from public.actor a
+        inner join public.film_actor fa on a.actor_id = fa.actor_id
+        inner join public.film f on fa.film_id = f.film_id
+    ) af1
+    inner join (
+        select distinct
+            a.actor_id,
+            f.release_year
+        from public.actor a
+        inner join public.film_actor fa on a.actor_id = fa.actor_id
+        inner join public.film f on fa.film_id = f.film_id
+    ) af2
+        on af1.actor_id = af2.actor_id
+       and af2.release_year > af1.release_year
+    group by 
+        af1.actor_id,
+        af1.first_name,
+        af1.last_name,
+        af1.release_year
+) t
+group by t.actor_id, t.first_name, t.last_name
+order by max_gap desc;
+
+-- Distinct is used to avoid duplicate release years per actor, ensuring accurate calculation of consecutive year gaps.
 
 -- Solution 3: Join > We need intermediate calculation of gaps and its required to compare multiple rows per actor
 -- therefore, cte or subquery is required
